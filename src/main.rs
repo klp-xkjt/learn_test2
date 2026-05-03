@@ -1,40 +1,33 @@
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+struct Person {
+    name: String,
+    age: u32
+}
 fn main() {
-    let a: i32 = 10;
-    let b = || -> i32 {
-        a + 1
-    };
-    let c = |x, y| x + y;
-    println!("{}", b());
-    println!("{}", c(1, 2));
-
-    let mut string_a = String::from("Hello");
-    let a1 = || println!("{string_a}");
-    a1();
-
-    let mut a2 = || {
-        string_a.push(' ');
-        string_a.push_str("World");
-        println!("{string_a}")
-    };
-    a2();
-
-    let mut a3 = move || {
-        if string_a == String::from("Hello World") {
-            println!("string_a will be borrowed: {}", string_a);
-        } else {
-            string_a.push(' ');
-            string_a.push_str("World");
-            println!("string_a will be borrowed: {}", string_a);
+    let mut person_list: [Person; 3] = [
+        Person {
+            name: String::from("bbbb"),
+            age: 25
+        },
+        Person {
+            name: String::from("aaa"),
+            age: 34
+        },
+        Person {
+            name: String::from("cccc"),
+            age: 30
         }
-    };
-    a3();
-    // The string_a are borrowed.
-    // println!("{}", string_a);
+    ];
+    person_list.sort_by_key(|r| r.age);
+    println!("{person_list:?}");
 
-    let op: Option<i32> = Some(12);
-    let op_re: i32 = op.unwrap_or_else(|| {
-        println!("执行闭包");
-        12
+    person_list.sort_by_key(|r| r.name.clone());
+    println!("{person_list:?}");
+
+    let mut num_sort_operations = 0;
+    person_list.sort_by_key(|r| {
+        num_sort_operations += 1;
+        r.age
     });
-    println!("{op_re}");
+    println!("{person_list:#?}, sorted in {num_sort_operations} operations");
 }
