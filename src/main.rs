@@ -1,50 +1,66 @@
-use std::ops::{Deref, DerefMut};
-use std::mem;
+use std::rc::{Rc, Weak};
+use std::cell::RefCell;
+use crate::List::{Cons, Nil};
 
-struct MyBox<T>(T);
-impl<T> MyBox<T> {
-    fn new(x: T) -> MyBox<T> {
-        MyBox(x)
+#[derive(Debug)]
+enum List {
+    Cons(i32, RefCell<Rc<List>>),
+    Nil,
+}
+impl List {
+    fn tail(&self) -> Option<&RefCell<Rc<List>>> {
+        match self {
+            Cons(_, item) => Some(item),
+            Nil => None
+        }
     }
 }
-impl<T> Drop for MyBox<T> {
-    fn drop(&mut self) {
-        println!("Your Box is dropped.");
-    }
-}
-impl<T> Deref for MyBox<T> {
-    type Target = T;
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-impl<T> DerefMut for MyBox<T> {
-    fn deref_mut(&mut self) -> &mut T {
-        &mut self.0
-    }
-}
-fn hello(name: &str) {
-    println!("Hello, {name}")
+
+#[derive(Debug)]
+struct Node {
+    value: i32,
+    parent: RefCell<Weak<Node>>,
+    children: RefCell<Vec<Rc<Node>>>
 }
 
 fn main() {
-    let a = 5;
-    let b = MyBox::new(a);
-    assert_eq!(5, a);
-    assert_eq!(5, *b);
+    let a = Rc::new(Cons(5, RefCell::new(Rc::new(Nil))));
+    println!("a initial rc count = {}", Rc::strong_count(&a));
+    println!("a next item = {:?}", a.tail());
 
-    let gate = MyBox::new(String::from("Gate"));
-    hello(&gate);
-    hello(&*gate);
+    let b = Rc::new(Cons(10, RefCell::new(Rc::clone(&a))));
+    println!("a rc count after b creation = {}", Rc::strong_count(&a));
+    println!("b initial rc count = {}", Rc::strong_count(&b));
+    println!("b next item = {:?}", b.tail());
 
-    let mut b2 = MyBox::new(200);
-    *b2 = 999;
-    println!("{}", *b2); 
+    if let Some(link) = a.tail() {
+        *link.borrow_mut() = Rc::clone(&b)
+    }
+    println!("b rc count after changing a = {}", Rc::strong_count(&b));
+    println!("a rc count after changing a = {}", Rc::strong_count(&a));
+
+    let leaf = Rc::new(Node {
+        value: 3,
+        parent: RefCell::new(Weak::new()),
+        children: RefCell::new(vec![])
+    });
+    println!("leaf strong = {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
 
     {
-        let my_box = MyBox::new(13);
-        println!("{}", *my_box);
-        mem::drop(my_box);
+        let branch = Rc::new(Node {
+            value: 5,
+            parent: RefCell::new(Weak::new()),
+            children: RefCell::new(vec![Rc::clone(&leaf)])
+        });
+        *leaf.parent.borrow_mut() = Rc::downgrade(&branch);
+        println!("branch strong = {}, weak = {}", Rc::strong_count(&b), Rc::weak_count(&b));
+        println!("leaf strong = {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
     }
-    mem::drop(b2);
+
+    println!("Leaf parent = {:?}", leaf.parent.borrow().upgrade());
+    println!(
+        "leaf strong = {}, weak = {}",
+        Rc::strong_count(&leaf),
+        Rc::weak_count(&leaf),
+    );
 }
