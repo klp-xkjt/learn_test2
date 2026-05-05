@@ -1,9 +1,15 @@
 use std::ops::{Deref, DerefMut};
+use std::mem;
 
 struct MyBox<T>(T);
 impl<T> MyBox<T> {
     fn new(x: T) -> MyBox<T> {
         MyBox(x)
+    }
+}
+impl<T> Drop for MyBox<T> {
+    fn drop(&mut self) {
+        println!("Your Box is dropped.");
     }
 }
 impl<T> Deref for MyBox<T> {
@@ -34,4 +40,11 @@ fn main() {
     let mut b2 = MyBox::new(200);
     *b2 = 999;
     println!("{}", *b2); 
+
+    {
+        let my_box = MyBox::new(13);
+        println!("{}", *my_box);
+        mem::drop(my_box);
+    }
+    mem::drop(b2);
 }
