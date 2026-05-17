@@ -2,11 +2,11 @@
 pub enum Quality {
     Bad,
     Good,
-    VeryGood
+    VeryGood,
 }
 #[derive(Debug)]
 pub struct Dishes {
-    pub quality: Quality
+    pub quality: Quality,
 }
 pub fn choose_good_dishes(dish: Vec<Dishes>) -> Vec<Dishes> {
     let dish_iter = dish.into_iter();
@@ -56,27 +56,24 @@ mod tests {
     fn adaptors() {
         let vec_test = vec![-12, -1, 0, 16, 25, 33];
         let vec_iter = vec_test.iter();
-        let results: Vec<i32> = vec_iter
-            .filter(|&&x| x >= 0)
-            .map(|&x| x * 2)
-            .collect();
+        let results: Vec<i32> = vec_iter.filter(|&&x| x >= 0).map(|&x| x * 2).collect();
         println!("{:?}", results);
     }
     #[test]
     fn dishes_choose() {
         let dishes_before: Vec<Dishes> = vec![
             Dishes {
-                quality: Quality::Good
+                quality: Quality::Good,
             },
             Dishes {
-                quality: Quality::VeryGood
+                quality: Quality::VeryGood,
             },
             Dishes {
-                quality: Quality::Bad
+                quality: Quality::Bad,
             },
             Dishes {
-                quality: Quality::Good
-            }
+                quality: Quality::Good,
+            },
         ];
         let after_choosing = choose_good_dishes(dishes_before);
         println!("{after_choosing:?}")
